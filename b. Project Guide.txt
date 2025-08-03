@@ -1,0 +1,185 @@
+**Step-by-Step Instructions to Build Kafka Streaming Project with Python**
+
+---
+
+## 📆 Prerequisites
+
+* **OS**: Windows
+* **Java**: OpenJDK 17 or higher
+* **Kafka**: Version 3.9.1 (installed locally)
+* **Python**: 3.x (installed)
+* **Kafka-Python**: Python library for Kafka integration
+
+---
+
+## 🔢 Step 1: Java Setup
+
+1. Download and install OpenJDK (e.g., Temurin 17)
+2. Add Java to the system environment variable `JAVA_HOME`
+3. Add `%JAVA_HOME%\bin` to the system `PATH`
+4. Confirm installation:
+
+```bash
+java -version
+```
+
+---
+
+## 🔢 Step 2: Download and Extract Kafka
+
+1. Go to [Apache Kafka Downloads](https://kafka.apache.org/downloads)
+2. Download Kafka 3.9.1 with Scala 2.13
+3. Extract it to a folder (e.g., `F:\kafka\kafka_2.13-3.9.1`)
+
+---
+
+## 🔢 Step 3: Start Zookeeper and Kafka Server
+
+1. Open CMD and navigate to Kafka folder:
+
+```cmd
+cd F:\kafka\kafka_2.13-3.9.1
+```
+
+2. Start Zookeeper:
+
+```cmd
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+```
+
+3. Open a new CMD window and start Kafka broker:
+
+```cmd
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+```
+
+---
+
+## 🔢 Step 4: Create Kafka Topic
+
+```cmd
+.\bin\windows\kafka-topics.bat --create --topic user-activity --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+```
+
+### Check if Topic is Created:
+
+```cmd
+.\bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092
+```
+
+---
+
+## 🔢 Step 5: Install Python and Dependencies
+
+1. Install Python from [python.org](https://www.python.org/)
+2. Check version:
+
+```bash
+python --version
+```
+
+3. Install `kafka-python`:
+
+```bash
+pip install kafka-python
+```
+
+Create `requirements.txt`:
+
+```text
+kafka-python==2.0.2
+```
+
+---
+
+## 🔢 Step 6: Create Python Kafka Producer
+
+**File: producer.py**
+
+```python
+from kafka import KafkaProducer
+import json
+import time
+import random
+
+actions = ['login', 'logout', 'search', 'click', 'purchase']
+
+producer = KafkaProducer(
+    bootstrap_servers='localhost:9092',
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
+
+while True:
+    event = {
+        'user_id': random.randint(1, 1000),
+        'action': random.choice(actions),
+        'timestamp': time.time()
+    }
+    producer.send('user-activity', value=event)
+    print("Sent:", event)
+    time.sleep(1)
+```
+
+---
+
+## 🔢 Step 7: Create Python Kafka Consumer
+
+**File: consumer.py**
+
+```python
+from kafka import KafkaConsumer
+import json
+
+consumer = KafkaConsumer(
+    'user-activity',
+    bootstrap_servers='localhost:9092',
+    auto_offset_reset='earliest',
+    enable_auto_commit=True,
+    group_id='my-group',
+    value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+)
+
+for message in consumer:
+    print("Received:", message.value)
+```
+
+---
+
+## 🔢 Step 8: Running the Pipeline
+
+1. Run the producer:
+
+```bash
+python producer.py
+```
+
+2. In a separate terminal, run the consumer:
+
+```bash
+python consumer.py
+```
+
+You should now see streaming user events appearing in real-time.
+
+---
+
+## 🎓 Concepts You Learned
+
+* Kafka setup on Windows
+* Zookeeper and Broker config
+* Kafka topic creation and management
+* Python Kafka producer/consumer using `kafka-python`
+* Real-time data streaming concepts
+
+---
+
+## 📄 What Next?
+
+* Store streamed data into a database (PostgreSQL, MongoDB)
+* Add Docker for deployment
+* Add cloud support (e.g., AWS MSK or Confluent Cloud)
+* Use Spark Streaming for processing
+
+---
+
+This document can be used as your complete project guide and README base.
